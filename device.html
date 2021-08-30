@@ -277,6 +277,7 @@
 <script src="plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
 <!-- AdminLTE App -->
 <script src="dist/js/adminlte.js"></script>
+<script src="plugins/chart.js/Chart.js"></script>
 
 <!-- PAGE PLUGINS -->
 
@@ -285,7 +286,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2/dist/chartjs-plugin-annotation.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 <script>
-    /*Initialize pocetnog grapha*/
+    //  We first initialize an empty line graph ready to be drawn on
+    //  I don't use a function here as getting the chart object for updating proved troublesome
     var ctxL = document.getElementById("myChart").getContext('2d');
     var gradientFill = ctxL.createLinearGradient(0, 0, 0, 290);
     gradientFill.addColorStop(0, "rgba(173, 53, 186, 1)");
@@ -300,30 +302,22 @@
             height: 400,
         }
     });
-    
+
+    /*  On page load we send the default selected parameter to our api and receive the graph data   */
     $( document ).ready(function() {
-        lastNumber = 1; /*for testing*/
-        checked_values= getSelectedCheckboxValues('variables')
-        var labels=[];
-        var default_data=[];
+        lastNumber = 1; /* This variable was kept from the docx, I only made it static for my own testing purposes */
+        checked_values= getSelectedCheckboxValues('variables') /* We get the checked parameters from the sidebar */
         $.ajax({
             // GET is a default
             type: 'GET',
             crossDomain: true,
             dataType: 'json',
             cache: false,
-            // we can use hard-coded URL or URL template tag (doesn't work) or on form attribute - didn't work
-            // napravio sam lokalno api testiranja radi
-            // , treba zamijeniti url na odgovarajuci api
-            url: 'http://optika.bax/api/'+lastNumber+"/data", //"getme/"+lastNumber+"?variables=P", //"get/ajax/data/", // form.attr("data-validate-url"), // '{% url "get_data" %}' - not working, //"get/ajax/data/" works
+            // I used my own api for testing and therefore it should be changed accordingly
+            url: 'http://optika.bax/api/'+lastNumber+"/data",
             data:{"checked_variables" : checked_values, 'device_id':lastNumber, 'ts': sample_time},
-            //dataType: 'json',
             success: function (response) {
-                labels= response.labels; //response['labels']
-                default_data= response.default_data
-                mydata= response.data
-                var len = Object.keys(mydata).length; // number of variables
-                // mydata is json object with more key:values (variables: arrays)
+                /*  we call the graph drawing function  */
                 setChart(response)
             },
             error: function (response) {
@@ -334,11 +328,14 @@
             }
         });
     });
+
+    // This button redirects to the per-device alarm view but we haven't decided on it yet
     $(".btn-outline-warning").on('click', function(e){
         e.preventDefault();
         var id = $(this).data('id');
         document.location.href = '/'+id+'/alarms'
     })
+    // Placeholder button meant to later be used to redirect to the report
     function reportBtn(id) {
         var checked_variables = getSelectedCheckboxValues('variables')
         $.ajax({
@@ -356,7 +353,7 @@
             }
         })
     }
-
+    /*  PDF download for the chart */
     function downloadPDF2() {
         var newCanvas = document.querySelector('#myChart');
         var newCanvasImg = newCanvas.toDataURL("image/png", 1.0);
@@ -365,9 +362,8 @@
         doc.addImage(newCanvasImg, 'PNG', 10, 10, 280, 150 );
         doc.save('new-canvas.pdf');
     }
-    /*  INITIALIZE GRAPH, UCITATI POCETNE PODATKE PO POTREBI    */
 
-
+    // We get the selected values from the sidebar parameters
     function getSelectedCheckboxValues(name) {
         const checkboxes = document.querySelectorAll(`input[name="${name}"]:checked`);
         let values = [];
@@ -394,6 +390,7 @@
       Show default graph
     */
 
+    // This gets called whenever we check or uncheck a parameter in the sidebar
     $('#form_graph :input').on('change',function(e){
         e.preventDefault()
         checked_values= getSelectedCheckboxValues('variables')
@@ -405,27 +402,18 @@
         // GET AJAX request
         var form = $(this).closest("form");
         var lastNumber = window.location.href.match(/\d+$/);
-        lastNumber = 1; /*for testing*/
-        var labels=[];
-        var default_data=[];
+        lastNumber = 1; /*I changed this for my own testing purposes, can be deleted later*/
         $.ajax({
             // GET is a default
             type: 'GET',
             crossDomain: true,
             dataType: 'json',
             cache: false,
-            // we can use hard-coded URL or URL template tag (doesn't work) or on form attribute - didn't work
-            // napravio sam lokalno api testiranja radi
-            // , treba zamijeniti url na odgovarajuci api
-            url: 'http://optika.bax/api/'+lastNumber+"/data", //"getme/"+lastNumber+"?variables=P", //"get/ajax/data/", // form.attr("data-validate-url"), // '{% url "get_data" %}' - not working, //"get/ajax/data/" works
+            // I used my own api for testing and therefore it should be changed accordingly
+            url: 'http://optika.bax/api/'+lastNumber+"/data",
             data:{"checked_variables" : checked_values, 'device_id':lastNumber, 'ts': sample_time},
-            //dataType: 'json',
             success: function (response) {
-                labels= response.labels; //response['labels']
-                default_data= response.default_data
-                mydata= response.data
-                var len = Object.keys(mydata).length; // number of variables
-                // mydata is json object with more key:values (variables: arrays)
+                // caling the chart draw function
                 setChart(response)
             },
             error: function (response) {
@@ -436,24 +424,47 @@
             }
         });
     });
-
+    // generating random colors for the graph lines
     function random_rgba() {
         colors = Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ',' + Math.floor(Math.random() * 255) + ',';
         return colors ;
     }
 
+    // custom function used to update the graph according to the selected parameters
+    // we get the response from our api
     function setChart(response) {
         console.log(response)
         var ctxL = document.getElementById("myChart").getContext('2d');
-        var chartData = [];
-        var annotation_data = [];
+        var chartData = []; // this will contain our chart datasets
+        var annotation_data = [];   // this will contain our chart annotations/set_points
+
+        //minxmaxpoints will be used to set the prefered maximum and minimum y-axis based on set points
+        // we sort this from MIN to MAX value
+        const minmaxpoints = [...response.set_points].sort(function(a, b) {
+            return a - b;
+        });
+        // We again sort so that there are no null values
+        const minmaxresults = minmaxpoints.filter(function(x) {
+            return x !== null;
+        });
+        // Finally if the condition is met, we make a dataset to be used later for graph options
+        if(minmaxresults.length > 0){
+            var yaxesdata = {
+                suggestedMin: minmaxresults[0] - Math.round(minmaxresults[0]/10),
+                suggestedMax: minmaxresults[minmaxresults.length-1] + Math.round(minmaxresults[minmaxresults.length-1]/10),
+            };
+            console.log(yaxesdata)
+            myLineChart.options.scales.y = yaxesdata;
+        }
+
+        // We make a dataset for every selected variable
         response.variable.forEach(function(e, index){
             console.log(e, index);
-            colors = random_rgba();
             var gradientFill = ctxL.createLinearGradient(0, 0, 0, 290);
             var colors = random_rgba();
             gradientFill.addColorStop(0, "rgba("+colors+ "1)");
             gradientFill.addColorStop(1, "rgba("+colors+ "0.1)");
+            // We push each dataset into an array using our response data
             chartData.push(
                 {
                     label: e+' ('+ (response.set_points[index] != null ? response.set_points[index] : 'No set point') +') ',
@@ -467,7 +478,10 @@
                     pointBackgroundColor: "#000",
                 }
             )
+            // We check if this parameter has a set_point
             if(response.set_points[index] != null){
+                // We use the annotations plugin for chart.js
+                // And we push the annotation dataset into an array
                 annotation_data.push({
                     type: 'line',
                     mode: 'horizontal',
@@ -486,6 +500,7 @@
                 })
             }
         });
+        // We finally set the data and options for our CHART and call the built in update() function to draw it
         myLineChart.options.plugins.annotation.annotations = annotation_data;
         myLineChart.data.datasets = chartData;
         myLineChart.data.labels = response.labels;
