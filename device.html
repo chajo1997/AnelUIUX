@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
     <!-- Theme style -->
     <link rel="stylesheet" href="dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="plugins/daterangepicker/daterangepicker.css">
     <style>
         .active p button{
             background-color: #343a40;
@@ -235,6 +236,24 @@
                                 </div>
                             </div>
                             <div class="card-body">
+                                <form id="daysFilter" method="GET">
+                                    <div class="form-group col-md-4">
+                                        <label>Date range:</label>
+
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                              <span class="input-group-text">
+                                                <i class="far fa-calendar-alt"></i>
+                                              </span>
+                                            </div>
+                                            <input type="text" class="form-control float-right" id="reservation">
+                                            <button type="submit" class="btn btn-primary">Filter</button>
+                                        </div>
+
+                                        <!-- /.input group -->
+                                    </div>
+                                    <!-- /.card-body -->
+                                </form>
                                 <div style="max-height: 60%" class="chart">
                                     <canvas id="myChart" height="120" class="chartjs-render-monitor"></canvas>
                                 </div>
@@ -271,6 +290,7 @@
 <!-- REQUIRED SCRIPTS -->
 <!-- jQuery -->
 <script src="plugins/jquery/jquery.min.js"></script>
+<script src="plugins/moment/moment.min.js"></script>
 <!-- Bootstrap -->
 <script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 <!-- overlayScrollbars -->
@@ -282,11 +302,48 @@
 <!-- PAGE PLUGINS -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
-
+<script src="plugins/daterangepicker/daterangepicker.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2/dist/chartjs-plugin-annotation.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.1.1/chartjs-plugin-zoom.min.js" integrity="sha512-NxlWEbNbTV6acWnTsWRLIiwzOw0IwHQOYUCKBiu/NqZ+5jSy7gjMbpYI+/4KvaNuZ1qolbw+Vnd76pbIUYEG8g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 <script>
+    $('#daysFilter').on('submit', function (e) {
+        e.preventDefault();
+        console.log('Sta sad hmmm')
+        var lastnumber = 1;
+        checked_values= getSelectedCheckboxValues('variables')
+        $.ajax({
+            // GET is a default
+            type: 'GET',
+            crossDomain: true,
+            dataType: 'json',
+            cache: false,
+            // I used my own api for testing and therefore it should be changed accordingly
+            url: 'http://optika.bax/api/graph-filter',
+            data:{"checked_variables" : checked_values, 'device_id':lastNumber},
+            success: function (response) {
+                /*  we call the graph drawing function  */
+                setChart(response)
+            },
+            error: function (response) {
+                alert("Error with  the URL and database")
+                console.log("Error with  the URL and database")
+                console.log(response.status)
+                //console.log(response)
+            }
+        });
+    })
+    var date2 = new Date();
+    date2.setDate(date2.getDate()-1);
+    $('#reservation').daterangepicker({
+        timePicker: true,
+        maxDate: date2,
+        timePickerIncrement: 30,
+        locale: {
+            format: 'MM/DD/YYYY',
+            cancelLabel: 'Clear'
+        }
+    });
     //  We first initialize an empty line graph ready to be drawn on
     //  I don't use a function here as getting the chart object for updating proved troublesome
     var ctxL = document.getElementById("myChart").getContext('2d');

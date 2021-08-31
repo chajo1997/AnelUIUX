@@ -214,6 +214,10 @@
                                             <input type="text" name="datetime" class="form-control float-right" id="datetimepicker">
                                         </div>
                                     </div>
+                                    <div class="form-group col-md-3" style="align-self: flex-end;margin-left: 20px">
+                                        <input class="form-check-input" name="all_devices" type="checkbox">
+                                        <label class="form-check-label">All devices</label>
+                                    </div>
                                     <div class="col-md-12">
                                         <button type="submit" class="btn btn-primary float-right">Submit</button>
                                     </div>
@@ -353,8 +357,11 @@
         table.draw();
         $.fn.dataTable.ext.search.pop();
     })
+    var date2 = new Date();
+    date2.setDate(date2.getDate()-1);
     $('#datetimepicker').daterangepicker({
         timePicker: true,
+        maxDate: date2,
         timePickerIncrement: 30,
         locale: {
             format: 'MM/DD/YYYY hh:mm A',
