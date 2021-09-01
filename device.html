@@ -246,16 +246,17 @@
                                                 <i class="far fa-calendar-alt"></i>
                                               </span>
                                             </div>
-                                            <input type="text" class="form-control float-right" id="reservation">
-                                            <button type="submit" class="btn btn-primary">Filter</button>
+                                            <input type="text" class="form-control float-right" id="daterange">
                                         </div>
 
                                         <!-- /.input group -->
                                     </div>
                                     <!-- /.card-body -->
                                 </form>
-                                <div style="max-height: 60%" class="chart">
-                                    <canvas id="myChart" height="120" class="chartjs-render-monitor"></canvas>
+                                <div style="overflow: scroll;height:auto;">
+                                    <div style="max-height: 60%;width: auto" class="">
+                                        <canvas id="myChart" height="120" class=""></canvas>
+                                    </div>
                                 </div>
                             </div>
                             <!-- /.card-body -->
@@ -290,26 +291,35 @@
 <!-- REQUIRED SCRIPTS -->
 <!-- jQuery -->
 <script src="plugins/jquery/jquery.min.js"></script>
-<script src="plugins/moment/moment.min.js"></script>
+
 <!-- Bootstrap -->
 <script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 <!-- overlayScrollbars -->
 <script src="plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
 <!-- AdminLTE App -->
 <script src="dist/js/adminlte.js"></script>
-<script src="plugins/chart.js/Chart.js"></script>
 
 <!-- PAGE PLUGINS -->
-
+<script src="plugins/moment/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1"></script>
 <script src="plugins/daterangepicker/daterangepicker.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2/dist/chartjs-plugin-annotation.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.1.1/chartjs-plugin-zoom.min.js" integrity="sha512-NxlWEbNbTV6acWnTsWRLIiwzOw0IwHQOYUCKBiu/NqZ+5jSy7gjMbpYI+/4KvaNuZ1qolbw+Vnd76pbIUYEG8g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 <script>
-    $('#daysFilter').on('submit', function (e) {
-        e.preventDefault();
-        console.log('Sta sad hmmm')
+    //punjenje labela
+    /*var test = [];
+    var n = 2;
+    for(i=0; i<n; i++){
+        test = test.concat(response.labels.slice(0))
+    }*/
+    $('#daterange').on('apply.daterangepicker', (e, picker) => {
+        var start = moment(picker.startDate.format('YYYY-MM-DD'));
+        var end   = moment(picker.endDate.format('YYYY-MM-DD'));
+        var startDate = start.toDate();
+        var endDate = end.toDate();
+        var diff = end.diff(start, 'days');
         var lastnumber = 1;
         checked_values= getSelectedCheckboxValues('variables')
         $.ajax({
@@ -318,11 +328,15 @@
             crossDomain: true,
             dataType: 'json',
             cache: false,
-            // I used my own api for testing and therefore it should be changed accordingly
-            url: 'http://optika.bax/api/graph-filter',
-            data:{"checked_variables" : checked_values, 'device_id':lastNumber},
+            url: 'http://optika.bax/api/1/data',
+            data:{"checked_variables" : checked_values, 'device_id':lastNumber, start: startDate, end: endDate, days: diff},
             success: function (response) {
-                /*  we call the graph drawing function  */
+                var temporary = response['labels'];
+                console.log(temporary)
+                for(i=0;i < diff;i++){
+                    response.labels[response.labels.length] = i
+                    response['labels'] = response['labels'].concat(temporary.slice(0));
+                }
                 setChart(response)
             },
             error: function (response) {
@@ -332,10 +346,11 @@
                 //console.log(response)
             }
         });
-    })
+
+    });
     var date2 = new Date();
     date2.setDate(date2.getDate());
-    $('#reservation').daterangepicker({
+    $('#daterange').daterangepicker({
         timePicker: true,
         maxDate: date2,
         timePickerIncrement: 30,
@@ -357,6 +372,7 @@
         },
         options: {
             responsive: true,
+            width: 'auto',
             height: 400,
             plugins: {
                 zoom: {
