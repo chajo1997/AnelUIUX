@@ -116,13 +116,13 @@
               <li class="nav-item">
                 <a href="#" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Device 2 <button data-id="3" type="button" class="btn btn-outline-warning float-right" style="padding: 0px 5px;margin-top: 0px;z-index: 999"><i class="fas fa-exclamation-circle"></i></button></p>
+                  <p>Device 2</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="#" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Device 3 <button data-id="3" type="button" class="btn btn-outline-warning float-right" style="padding: 0px 5px;margin-top: 0px;z-index: 999"><i class="fas fa-exclamation-circle"></i></button></p>
+                  <p>Device 3</p>
                 </a>
               </li>
               <li class="nav-item">
@@ -140,7 +140,7 @@
               <li class="nav-item">
                 <a href="#" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Device 6 <button data-id="3" type="button" class="btn btn-outline-warning float-right" style="padding: 0px 5px;margin-top: 0px;z-index: 999"><i class="fas fa-exclamation-circle"></i></button></p>
+                  <p>Device 6</p>
                 </a>
               </li>
             </ul>
@@ -445,11 +445,8 @@
 <script src="plugins/chart.js/Chart.min.js"></script>
 
 <script>
-  $(".btn-outline-warning").on('click', function(e){
-    e.preventDefault();
-    var id = $(this).data('id');
-    document.location.href = '/'+id+'/alarms'
-  })
+
+
 </script>
 </body>
 </html>
