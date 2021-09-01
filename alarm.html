@@ -193,19 +193,6 @@
                             <form id="filterForm">
                                 <div class="card-body row">
                                     <div class="form-group col-md-4">
-                                        <label for="">Value range</label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">Vmin</span>
-                                            </div>
-                                            <input type="number" value="0" id="vmin" name="vmin" class="form-control float-right">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">Vmax</span>
-                                            </div>
-                                            <input type="number" value="99" id="vmax" name="vmax" class="form-control float-right">
-                                        </div>
-                                    </div>
-                                    <div class="form-group col-md-4">
                                         <label for="">Date range</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
@@ -215,11 +202,8 @@
                                         </div>
                                     </div>
                                     <div class="form-group col-md-3" style="align-self: flex-end;margin-left: 20px">
-                                        <input class="form-check-input" name="all_devices" type="checkbox">
+                                        <input class="form-check-input" id="all_devices" name="all_devices" type="checkbox">
                                         <label class="form-check-label">All devices</label>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <button type="submit" class="btn btn-primary float-right">Submit</button>
                                     </div>
                                 </div>
                                 <!-- /.card-body -->
@@ -321,29 +305,20 @@
 <script src="plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
 <script src="plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
 <script src="plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
-<script src="plugins/jszip/jszip.min.js"></script>
-<script src="plugins/pdfmake/pdfmake.min.js"></script>
-<script src="plugins/pdfmake/vfs_fonts.js"></script>
 <script src="plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="plugins/datatables-buttons/js/buttons.print.min.js"></script>
 <script src="plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+<script src="plugins/jszip/jszip.min.js"></script>
+<script src="plugins/pdfmake/pdfmake.min.js"></script>
+<script src="plugins/pdfmake/vfs_fonts.js"></script>
 <script src="plugins/daterangepicker/daterangepicker.js"></script>
 <script src="plugins/select2/js/select2.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 <script>
-    $('#filterForm').on('submit', function (e) {
-        e.preventDefault()
-        console.log('form submitted')
-        var vmax = $('#vmax').val();
-        var vmin = $('#vmin').val();
+    $('#datetimepicker').on('apply.daterangepicker', (e, picker) => {
         var startDate = $('#datetimepicker').data('daterangepicker').startDate;
         var endDate = $('#datetimepicker').data('daterangepicker').endDate;
         var table = $('#example1').DataTable();
-        $.fn.dataTable.ext.search.push(
-            function (settings, data, dataIndex){
-                return (+vmin <= +data[2] && +data[2] <= +vmax) ? true : false;
-            }
-        );
         if(startDate !== "" && endDate !== ""){
             var Start = startDate.format('YYYY/MM/DD HH:mm:ss');
             var End = endDate.format('YYYY/MM/DD HH:mm:ss');
@@ -356,7 +331,7 @@
         }
         table.draw();
         $.fn.dataTable.ext.search.pop();
-    })
+    });
     var date2 = new Date();
     date2.setDate(date2.getDate());
     $('#datetimepicker').daterangepicker({
@@ -368,21 +343,11 @@
             cancelLabel: 'Clear'
         }
     })
-    $('#datetimepicker').val("");
     $(function () {
         $("#example1").DataTable({
             "responsive": true, "lengthChange": false, "autoWidth": false,
             "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
         }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
-        $('#example2').DataTable({
-            "paging": true,
-            "lengthChange": false,
-            "searching": false,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false,
-            "responsive": true,
-        });
     });
     $('.select2bs4').select2({
         theme: 'bootstrap4',
@@ -394,6 +359,26 @@
             }
         }
     });
+    $('#all_devices').on('change', function (e) {
+        if($(this).is(':checked')){
+            $.ajax({
+                type: 'GET',
+                crossDomain: true,
+                dataType: 'json',
+                cache: false,
+                url: 'http://optika.bax/api/alarm-checkbox',
+                data:{},
+                success: function (response) {
+                    console.log(response)
+                },
+                error: function (response) {
+                    alert("Error with  the URL and database")
+                    console.log("Error with  the URL and database")
+                    console.log(response.status)
+                }
+            });
+        }
+    })
 </script>
 </body>
 </html>
