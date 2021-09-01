@@ -331,13 +331,15 @@
             url: 'http://optika.bax/api/1/data',
             data:{"checked_variables" : checked_values, 'device_id':lastNumber, start: startDate, end: endDate, days: diff},
             success: function (response) {
-                var temporary = response['labels'];
-                console.log(temporary)
-                for(i=0;i < diff;i++){
-                    response.labels[response.labels.length] = i
+                const temporary = [...response['labels']];
+                console.log(temporary, 'TEMPORARY')
+                for(i=1;i<diff+1;i++){
+                    response.labels[response.labels.length] = i.toString()
                     response['labels'] = response['labels'].concat(temporary.slice(0));
+                    console.log(response.labels, i, diff)
                 }
-                setChart(response)
+                response.labels.pop();
+                setChart(response, diff)
             },
             error: function (response) {
                 alert("Error with  the URL and database")
@@ -519,7 +521,7 @@
 
     // custom function used to update the graph according to the selected parameters
     // we get the response from our api
-    function setChart(response) {
+    function setChart(response, days) {
         console.log(response)
         var ctxL = document.getElementById("myChart").getContext('2d');
         var chartData = []; // this will contain our chart datasets
@@ -564,6 +566,22 @@
                     pointBackgroundColor: "#000",
                 }
             )
+            if(days){
+                for (i=1; i<days+1; i++){
+                    annotation_data.push({
+                        type: 'line',
+                        mode: 'vertical',
+                        scaleID: 'x',
+                        xMin: i.toString(),
+                        xMax: 300,
+                        value: i.toString(),
+                        borderColor: [
+                            "black",
+                        ],
+                        borderWidth: 2
+                    })
+                }
+            }
             // We check if this parameter has a set_point
             if(response.set_points[index] != null){
                 // We use the annotations plugin for chart.js
