@@ -308,17 +308,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.1.1/chartjs-plugin-zoom.min.js" integrity="sha512-NxlWEbNbTV6acWnTsWRLIiwzOw0IwHQOYUCKBiu/NqZ+5jSy7gjMbpYI+/4KvaNuZ1qolbw+Vnd76pbIUYEG8g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
 <script>
-    //punjenje labela
-    /*var test = [];
-    var n = 2;
-    for(i=0; i<n; i++){
-        test = test.concat(response.labels.slice(0))
-    }*/
     $('#daterange').on('apply.daterangepicker', (e, picker) => {
+        //moment objects for date difference
         var start = moment(picker.startDate.format('YYYY-MM-DD'));
         var end   = moment(picker.endDate.format('YYYY-MM-DD'));
+        //variables for ajax
         var startDate = start.toDate();
         var endDate = end.toDate();
+        //n days
         var diff = end.diff(start, 'days');
         var lastnumber = 1;
         checked_values= getSelectedCheckboxValues('variables')
@@ -331,15 +328,16 @@
             url: 'http://optika.bax/api/1/data',
             data:{"checked_variables" : checked_values, 'device_id':lastNumber, start: startDate, end: endDate, days: diff},
             success: function (response) {
-                const temporary = [...response['labels']];
-                console.log(temporary, 'TEMPORARY')
+                const temporary = [...response['labels']]; //because I change the response labels i stored a copy
+                // filling the labels with appropriate labels for n days
                 for(i=1;i<diff+1;i++){
-                    response.labels[response.labels.length] = i.toString()
-                    response['labels'] = response['labels'].concat(temporary.slice(0));
+                    //using i=1 due to conflicts with default chart 0 point
+                    response.labels[response.labels.length] = i.toString()  //adding cut for vertical line
+                    response['labels'] = response['labels'].concat(temporary.slice(0)); //adding labels for every n to array
                     console.log(response.labels, i, diff)
                 }
-                response.labels.pop();
-                setChart(response, diff)
+                response.labels.pop(); // I need to pop a 0 that appears at the end of the array until I figure out why
+                setChart(response, diff)    //added diff parameter to function for later calculation
             },
             error: function (response) {
                 alert("Error with  the URL and database")
@@ -566,6 +564,7 @@
                     pointBackgroundColor: "#000",
                 }
             )
+            //  we check if there are multiple days and generate annotations for x accordingly
             if(days){
                 for (i=1; i<days+1; i++){
                     annotation_data.push({
