@@ -1,0 +1,52 @@
+{% extends 'myapp/base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+</form>
+<div class="login-box">
+  <!-- /.login-logo -->
+  <div class="card card-outline card-primary">
+    <div class="card-header text-center">
+      <a href="#" class="h1"><b>Name/Logo</b></a>
+    </div>
+    <div class="card-body">
+      <p class="login-box-msg">Login</p>
+
+      <form action="{% url 'login' %}" method="post">
+          {% csrf_token %}
+          {{ form.non_field_errors }}
+        <div class="input-group mb-3">
+          {{ form.username }}
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-user"></span>
+            </div>
+          </div>
+
+        </div>
+          {{ form.username.errors }}
+        <div class="input-group mb-3">
+          {{ form.password }}
+
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-lock"></span>
+            </div>
+          </div>
+        </div>
+          {{ form.password.errors }}
+        <div class="row">
+          <div class="col-4">
+            <button type="submit" class="btn btn-primary btn-block">Login</button>
+          </div>
+          <!-- /.col -->
+        </div>
+      </form>
+    <!-- /.card-body -->
+  </div>
+  <!-- /.card -->
+</div>
+</div>
+
+{% endblock %}
