@@ -320,8 +320,8 @@
         var endDate = $('#datetimepicker').data('daterangepicker').endDate;
         var table = $('#example1').DataTable();
         if(startDate !== "" && endDate !== ""){
-            var Start = startDate.format('YYYY-MM-DD HH:mm A');
-            var End = endDate.format('YYYY-MM-DD HH:mm A');
+            var Start = startDate.format('YYYY-MM-DD');
+            var End = endDate.format('YYYY-MM-DD');
             console.log(Start, End)
             $.fn.dataTable.ext.search.push(
                 function (settings, data, dataIndex){
@@ -336,11 +336,11 @@
     var date2 = new Date();
     date2.setDate(date2.getDate());
     $('#datetimepicker').daterangepicker({
-        timePicker: true,
+        timePicker: false,
         maxDate: date2,
         timePickerIncrement: 30,
         locale: {
-            format: 'YYYY-MM-DD hh:mm A',
+            format: 'YYYY-MM-DD',
             cancelLabel: 'Clear'
         }
     })
