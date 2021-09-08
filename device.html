@@ -360,17 +360,28 @@
     }*/
 
     $('#canvasWrapper').on('contextmenu', function(e) {
-        console.log('right clicked')
         myLineChart.resetZoom();
     });
 
+    function getDaysArray(start, end) {
+        for(var arr=[],dt=new Date(start); dt<=end; dt.setDate(dt.getDate()+1)){
+            arr.push(new Date(dt));1
+        }
+        return arr;
+    }
+
     $('#daterange').on('apply.daterangepicker', (e, picker) => {
         //moment objects for date difference
+
         var start = moment(picker.startDate.format('YYYY-MM-DD'));
         var end   = moment(picker.endDate.format('YYYY-MM-DD'));
         //variables for ajax
         var startDate = start.toDate();
         var endDate = end.toDate();
+        var days = getDaysArray(start,end);
+        days.forEach(function (e, index) {
+            days[index] = e.toISOString('YYYY-MM-DD').slice(0,10)
+        })
         //n days
         var diff = end.diff(start, 'days');
         var lastnumber = 1;
@@ -382,7 +393,7 @@
             dataType: 'json',
             cache: false,
             url: 'http://optika.bax/api/1/data',
-            data:{"checked_variables" : checked_values, 'device_id':lastNumber, start: startDate, end: endDate, days: diff},
+            data:{"checked_variables" : checked_values, 'device_id':lastNumber, start: startDate, end: endDate, days: diff, dates: days},
             success: function (response) {
                 const temporary = [...response['labels']]; //because I change the response labels i stored a copy
                 // filling the labels with appropriate labels for n days
@@ -390,10 +401,29 @@
                     //using i=1 due to conflicts with default chart 0 point
                     response.labels[response.labels.length] = i.toString()  //adding cut for vertical line
                     response['labels'] = response['labels'].concat(temporary.slice(0)); //adding labels for every n to array
-                    console.log(response.labels, i, diff)
                 }
                 response.labels.pop(); // I need to pop a 0 that appears at the end of the array until I figure out why
-                setChart(response, diff)    //added diff parameter to function for later calculation
+                console.log(response.data)
+                console.log(days)
+                console.log(response.dates)
+                var null_array = []
+                for(i=0;i<32;i++){
+                    null_array.push(null)
+                }
+                response['dates'].forEach(function (e,index) {
+                    if(days.includes(e)){
+                        null
+                    }else{
+                        var find_index = index*32;
+                        response.data.forEach(function(e, index){
+                            e[index].splice(find_index, 0, null_array);
+                        })
+                    }
+                });
+                console.log(response.dates);
+
+
+                setChart(response, diff, days)    //added diff parameter to function for later calculation
             },
             error: function (response) {
                 alert("Error with  the URL and database")
@@ -411,7 +441,7 @@
         maxDate: date2,
         timePickerIncrement: 30,
         locale: {
-            format: 'DD/MM/YYYY',
+            format: 'YYYY-MM-DD',
             cancelLabel: 'Clear'
         }
     });
@@ -564,15 +594,13 @@
                 alert("Error with  the URL and database")
                 console.log("Error with  the URL and database")
                 console.log(response.status)
-                //console.log(response)
             }
         });
     });
 
     // custom function used to update the graph according to the selected parameters
     // we get the response from our api
-    function setChart(response, days) {
-        console.log(response)
+    function setChart(response, days, dates) {
         const colors = [
             'blue',
             'red',
@@ -609,7 +637,6 @@
 
         // We make a dataset for every selected variable
         response.variable.forEach(function(e, index){
-            console.log(e, index);
             // We push each dataset into an array using our response data
             chartData.push(
                 {
