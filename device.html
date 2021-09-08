@@ -395,6 +395,11 @@
             url: 'http://optika.bax/api/1/data',
             data:{"checked_variables" : checked_values, 'device_id':lastNumber, start: startDate, end: endDate, days: diff, dates: days},
             success: function (response) {
+                // if we select only days without values we return with an alert
+                if(response.dates.length === 0){
+                    alert("There is no data for the selected dates")
+                    return
+                }
                 const temporary = [...response['labels']]; //because I change the response labels i stored a copy
                 // filling the labels with appropriate labels for n days
                 for(i=1;i<diff+1;i++){
@@ -403,27 +408,37 @@
                     response['labels'] = response['labels'].concat(temporary.slice(0)); //adding labels for every n to array
                 }
                 response.labels.pop(); // I need to pop a 0 that appears at the end of the array until I figure out why
-                console.log(response.data)
-                console.log(days)
-                console.log(response.dates)
-                var null_array = []
-                for(i=0;i<32;i++){
-                    null_array.push(null)
-                }
-                response['dates'].forEach(function (e,index) {
-                    if(days.includes(e)){
+
+                // we need to add null values for days without data so that the graph draws itself properly
+                //bug with added line labels needs to be fixed !
+                //days array containing all the dates of the selected days
+                days.forEach(function (e,index) {
+                    //skip adding values if we have the data
+                    if(response.dates.includes(e)){
+                        console.log('includea')
                         null
+                    //if the response dates doesn't match our days array we have to add empty values
                     }else{
+                        console.log('ne includea')
+                        //we create an array holding 32 null values because we have 32 labels
+                        var null_array = []
+                        for(i=0;i<32;i++){
+                            null_array.push(null)
+                        }
+                        //we multiply the index so that we get a starting point for the insert
                         var find_index = index*32;
-                        response.data.forEach(function(e, index){
-                            e[index].splice(find_index, 0, null_array);
-                        })
+                        if(find_index>1) null_array.push(null); //testing fix for indexing
+                        //we go trough the data for every parameter and set null values where there are empty days
+                        //we insert 32 null values on the last index of the previous day so the entire day is empty
+                        Object.keys(response.data).forEach(function(key, index) {
+                            response.data[key].splice.apply(response.data[key], [find_index, 0].concat(null_array));
+                        }, response.data);
                     }
                 });
-                console.log(response.dates);
+                console.log(response.data);
 
 
-                setChart(response, diff, days)    //added diff parameter to function for later calculation
+                setChart(response, diff, days)    //added diff parameter to function for later calculation, added days parameter for calculating empty days
             },
             error: function (response) {
                 alert("Error with  the URL and database")
