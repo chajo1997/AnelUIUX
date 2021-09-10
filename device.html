@@ -407,7 +407,6 @@
                     response.labels[response.labels.length] = i.toString()  //adding cut for vertical line
                     response['labels'] = response['labels'].concat(temporary.slice(0)); //adding labels for every n to array
                 }
-                response.labels.pop(); // I need to pop a 0 that appears at the end of the array until I figure out why
 
                 // we need to add null values for days without data so that the graph draws itself properly
                 //days array containing all the dates of the selected days
@@ -423,17 +422,27 @@
                             null_array.push(null)
                         }
                         //we multiply the index so that we get a starting point for the insert
+                        console.log(index, 'Index')
                         var find_index = index*32;
-                        if(find_index>1) null_array.push(null); //testing fix for indexing
                         //we go trough the data for every parameter and set null values where there are empty days
                         //we insert 32 null values on the last index of the previous day so the entire day is empty
                         Object.keys(response.data).forEach(function(key, data_index) {
-                            response.data[key].splice(find_index, 0, null)  // we add a null value for the line label
                             response.data[key].splice.apply(response.data[key], [find_index, 0].concat(null_array));
+                            console.log(find_index)
                         }, response.data);
                     }
                 });
-                console.log(response.data);
+                // now we add a null value for each day start so that data points don't draw on the separator lines
+                days.forEach(function (e,index) {
+                    if(index>0){
+                        var day_start_index = (index*32)+index-1;
+                        console.log('Day start: '+day_start_index)
+                        Object.keys(response.data).forEach(function (key, data_index) {
+                            response.data[key].splice(day_start_index, 0, null)  // we add a null value for the line label
+                        }, response.data);
+                    }
+                    console.log(response.data)
+                })
 
                 setChart(response, diff, days)    //added diff parameter to function for later calculation, added days parameter for calculating empty days
             },
